@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "iostream": "cpp",
+        "ios": "cpp",
+        "ostream": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
+    },
+    "cmake.sourceDirectory": "F:/Code_House/Raytracing/raytracing.github.io"
+}
