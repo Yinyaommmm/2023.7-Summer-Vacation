@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My PPM Viewer</title>
+</head>
+
+<style>
+    body,
+    html,
+    h1 {
+        margin: 0;
+        padding: 0;
+    }
+
+    .mainForm {
+        width: 100vw;
+        height: 100vh;
+        background-color: rgb(165, 240, 165, 100);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .mainInfo {
+        height: 30vh;
+        position: relative;
+        flex: 0 0 auto;
+    }
+
+    .mainForm>.mainInfo>h1 {
+        padding-left: 10vw;
+    }
+
+    #area {
+        flex: 1 0 auto;
+        width: 100vw;
+        height: 20vh;
+        background-color: lightblue;
+        line-height: 20vh;
+        text-align: center;
+        position: relative;
+        font-size: 40px;
+    }
+
+    .cvsBox {
+        height: 40vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+    }
+
+    #cvs {
+        align-self: center;
+    }
+</style>
+
+<body>
+    <div class="mainForm">
+        <div class="mainInfo">
+            <h1>
+                PPM Viewer :<span id="fileNameSpan"></span>
+            </h1>
+            <div id="area">
+                拖拽文件到此处
+            </div>
+        </div>
+        <div class="cvsBox">
+            <canvas id="cvs"></canvas>
+        </div>
+    </div>
+</body>
+<script>
+    const area = document.querySelector('#area');
+    const fileNameSpan = document.querySelector('#fileNameSpan');
+
+    area.addEventListener("dragover", handleDrop);
+    area.addEventListener("drop", handleDrop);
+    function handleDrop(e) {
+        e.preventDefault();
+        if (e.type !== "drop") {
+            return;
+        }
+        // 
+        const file = e.dataTransfer.files[0]
+        if (!file) {
+            alert("未上传文件")
+            return
+        }
+        if (file.name.substr(-4) !== '.ppm') {
+            alert("文件后缀错误")
+            return;
+        }
+        fileNameSpan.innerHTML = file.name
+        const fileReader = new FileReader()
+        fileReader.onload = function (e) {
+            // 读取完毕则处理图片
+            processPPM(e.target.result);
+        }
+        fileReader.readAsText(file)
+    }
+    function processPPM(fileContents) {
+        // 移除开头和末尾的空格
+        fileContents = fileContents.replace(/^\s+/, '').replace(/\s+$/, '');
+        if (fileContents.substr(0, 2) !== "P3") {
+            alert("不是PPM 文件")
+            return;
+        }
+        const data = fileContents.split(/\s+/)
+        const width = data[1]
+        const height = data[2]
+        const maxColor = data[3]
+        const ctx = cvs.getContext('2d');
+        cvs.width = width;
+        cvs.height = height
+        ctx.clearRect(0, 0, cvs.widht, cvs.height)
+        const imageData = ctx.getImageData(0, 0, width, cvs.height = height)
+        const pixels = imageData.data
+        let pIdx = 0;
+        for (let idx = 4; idx < data.length; idx += 3) {
+            pixels[pIdx++] = data[idx];
+            pixels[pIdx++] = data[idx + 1];
+            pixels[pIdx++] = data[idx + 2];
+            pixels[pIdx++] = 255;
+        }
+        ctx.putImageData(imageData, 0, 0)
+    }
+    let i = 1;
+    cvs.addEventListener('click', () => {
+        console.log(1);
+        cvs.style.top = `${i--}vh`
+    })
+    // 读取文件
+</script>
+
+</html>
