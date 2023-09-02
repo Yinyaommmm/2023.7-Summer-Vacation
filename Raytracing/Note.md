@@ -198,3 +198,45 @@ r g b值有些太小，可以适当放大，最后输出结果改为sqrt(r,g,b).
 在ray_color函数中，如果发现return false会直接将光线记为黑色（就是对本次光线颜色贡献值为0,如果运气不好可能造成某个不应该是黑色的地方纯黑。)
 
 ![image-20230831215351784](C:\Users\卫清渠\AppData\Roaming\Typora\typora-user-images\image-20230831215351784.png)
+
+#### Dielectric 电介质
+
+光射到它们上面可以反射与折射。
+
+Snell's law : n sinθ = n' sinθ'
+
+折射建模： 入射光R、折射率η ，法线n向上；  出射光R‘，折射率η'，法线n'向下。
+
+需要保证R，n，R’，n'是单位向量。
+
+将R’分解为R‘⊥ =  R + cosθ * n, R'∥ = - 根号(1- R'⊥^2) n
+
+cosθ可用 -R·n 来表示。
+
+#### Schlick近似菲涅尔方程
+
+菲涅尔方程描述了光线经过两个介质的界面时，反射率（反射光能量 / 入射光能量）的比值。
+
+![image-20230902000836377](C:\Users\卫清渠\AppData\Roaming\Typora\typora-user-images\image-20230902000836377.png)
+
+它实际上考虑了光p偏振和s偏振两个方向上的反射比。一般的渲染认为光五偏振，也就是p和s偏振量相同，所以反射率R = (Rs + Rp )/2
+
+当入射角θ -> 90°时，反射率->1，公式比较复杂，计算代价高昂。
+
+![image-20230902000958474](C:\Users\卫清渠\AppData\Roaming\Typora\typora-user-images\image-20230902000958474.png)
+
+R(0)表示垂直时，光的反射率，用上面Rs，Rp计算R（0）
+
+![image-20230902001056892](C:\Users\卫清渠\AppData\Roaming\Typora\typora-user-images\image-20230902001056892.png)
+
+全反射+折射
+
+![image-20230902001659656](C:\Users\卫清渠\AppData\Roaming\Typora\typora-user-images\image-20230902001659656.png)
+
+全反射+折射+schlick近似
+
+![image-20230902001846069](C:\Users\卫清渠\AppData\Roaming\Typora\typora-user-images\image-20230902001846069.png)
+
+可以看到最左侧的dielectric顶端（入射角近乎0的地方）变得有些透明（）
+
+#### trick：负半径的玻璃球
