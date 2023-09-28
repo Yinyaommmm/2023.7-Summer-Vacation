@@ -66,8 +66,6 @@ inline double random_double()
 }
 ```
 
-
-
 #### 抗锯齿
 
 传统做法：混合像素周围颜色。按理来说是要进行分层的，同层内混色，这里没有做。
@@ -240,3 +238,26 @@ R(0)表示垂直时，光的反射率，用上面Rs，Rp计算R（0）
 可以看到最左侧的dielectric顶端（入射角近乎0的地方）变得有些透明（）
 
 #### trick：负半径的玻璃球
+
+球的法向由半径决定。
+
+```c++
+vec3 outward_normal = (rec.p - center) / radius; // 圆特有的归一化
+```
+
+当radius为负数时，所谓的outward_normal实际上是朝秋心的，因此碰撞判定会认为射线射到的并不是front_face。
+
+```c++
+// 默认从空气中射入介质中，如果从背面射出说明是从介质中射入空气中
+double refraction_ratio = rec.front_face ? (1.0 / ir) : ir;
+```
+
+既然不是front_face那么就会被判定为从介质射入空气中。
+
+能使用这个trick原因在于根据固定了折射面一面是空气并且根据front_face判定refraction_ratio的比值。如果scatter()函数可以传入碰撞两侧的mat，那么就不需要这个trick了。
+
+#### 摆放照相机
+
+确定好look at, look from； 利用叉乘算出照相机x,y,z（z是反的）。
+
+也要设置好fov。注意到viewport_height =  2 * tan（fov/2);
