@@ -1,8 +1,12 @@
 import numpy as np
+import time
 import DataDealing as dl
 import Nerual as nr
-import time
 import Loss as ls
+
+# 创建Nerual文件夹，__init__.py
+# 内部有 Layer部分，actFunc部分，LossFunc部分
+# 在nr的大命名空间下 nr.FCLayer  nr.act.Sigmoid nr.ls.MAE
 
 train_X, train_y, test_X, test_y = dl.createTrainAndTest(size=500)
 # dl.drawScatter(train_X, train_y, train_y, description="train")
