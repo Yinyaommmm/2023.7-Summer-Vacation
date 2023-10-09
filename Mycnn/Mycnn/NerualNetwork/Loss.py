@@ -3,10 +3,10 @@ from abc import abstractclassmethod
 from abc import ABC
 
 
-class Loss:
+class Loss(ABC):
     @abstractclassmethod
-    def calcLoss(y_hat: np.ndarray, y_label: np.ndarray)
-    pass
+    def calcLoss(y_hat: np.ndarray, y_label: np.ndarray):
+        pass
 
 
 def MAE(y_hat: np.ndarray, y_label: np.ndarray):

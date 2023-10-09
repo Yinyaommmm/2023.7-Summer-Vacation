@@ -1,2 +1,3 @@
-import Nrrr as nr
-nr.minus()
+import NerualNetwork as nn
+
+print(nn.act.ReLu(-1))

@@ -1,18 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 def createTrainAndTest(size):
     step = 2*np.pi / size
+    train_size = int(0.8 * size)
+    test_size = size - train_size
     X = np.arange(-np.pi, np.pi, step)
     X = np.random.choice(X, size, replace=False)
-    train_X = X[0:int(size*0.8)]
-    train_X.sort()
+    train_X = X[0:train_size].reshape(train_size,-1,1)
     train_y = np.sin(train_X)
 
-    test_X = X[int(size*0.8):]
-    test_X.sort()
-    # test_X = X
+    test_X = X[train_size:].reshape(test_size,-1,1)
     test_y = np.sin(test_X)
 
     return train_X, train_y, test_X, test_y

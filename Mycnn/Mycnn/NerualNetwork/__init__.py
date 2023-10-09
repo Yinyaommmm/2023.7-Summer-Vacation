@@ -1,82 +1,13 @@
-import numpy as np
+# import Nrrr.add as ad  # 绑定在nr.ad的命名空间下
+# from Nrrr.minus import *  # 绑定在nr的命名空间下
 from abc import abstractclassmethod
 from abc import ABC
 from typing import List
-import DataDealing as dl
-# 激活函数基类
-
-
-class ActivationFunc:
-    @classmethod
-    def forward(self, x):
-        pass
-
-    @classmethod
-    def backProp(self, x):
-        pass
-
-# ReLU部分
-
-
-def ReLu(x):
-    return max(0, x)
-
-
-def ReLuPartial(x):
-    return 1 if x >= 0 else 0
-
-
-ReLu_Vectorized = np.vectorize(ReLu)
-ReLuPartial_Vectorized = np.vectorize(ReLuPartial)
-
-
-class ReLuFunc(ActivationFunc):
-    @classmethod
-    def forward(self, x: np.ndarray):
-        # 返回正向传播结果
-        return ReLu_Vectorized(x)
-
-    @classmethod
-    def backProp(self, x: np.ndarray):
-        return ReLuPartial_Vectorized(x)
-# 幂等映射
-
-
-class IdentityFunc(ActivationFunc):
-    @classmethod
-    def forward(self, x: np.ndarray):
-        assert (x.shape[1] == 1)  # 确保是个列向量
-        return x
-
-    @classmethod
-    def backProp(self, x: np.ndarray):
-        return np.ones_like(x)
-
-# Sigmoid
-
-
-def Sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-
-def SigmoidPartial(x):
-    y = Sigmoid(x)
-    return y*(1-y)
-
-
-Sigmoid_Vectorized = np.vectorize(Sigmoid)
-SigmoidPartial_Vectorized = np.vectorize(SigmoidPartial)
-
-
-class SigmoidFunc(ActivationFunc):
-    @classmethod
-    def forward(self, x: np.ndarray):
-        # 返回正向传播结果
-        return Sigmoid_Vectorized(x)
-
-    @classmethod
-    def backProp(self, x: np.ndarray):
-        return SigmoidPartial_Vectorized(x)
+import numpy as np
+import NerualNetwork.Loss as ls
+import NerualNetwork.ActFunc as act
+import NerualNetwork.DataDealing as dl
+import time
 # 层虚基类
 
 
@@ -116,7 +47,7 @@ class Layer(ABC):
 
 
 class FCLayer(Layer):
-    def __init__(self, in_feature: int, out_feature: int, act_func: ActivationFunc) -> None:
+    def __init__(self, in_feature: int, out_feature: int, act_func: act.ActivationFunc) -> None:
         # in_feature 输入神经元数量
         # out_feature 输出神经元数量
         # 输入数据
@@ -271,6 +202,7 @@ class Network:
         self.clearPartial()
 
     def train(self, trainSet, trainLabelSet, testSet, testLabelSet):
+        start_time = time.time()
         space = self.epochs / 20  # 每5%进行一次测试
         for epoch in range(self.epochs+1):
             print(f"--------epoch: {epoch}----------")
@@ -283,11 +215,14 @@ class Network:
                                      testLabelSet, epoch, self.test_loss_tendency_y, "Test Loss")
                 self.validation_loss(trainSet,
                                      trainLabelSet, epoch, self.train_loss_tendency_y, "Train Loss")
-            self.clearLoss()
+            self.clearLoss() 
+        end_time = time.time()
+        total_time = int(end_time - start_time)    
+        print(f'Total time: {total_time}')
         # 绘制Loss曲线
         dl.drawPlot(x=self.loss_tendency_x, y1=self.test_loss_tendency_y, y2=self.train_loss_tendency_y,
                     title='Loss Tendency', x_des="Epoch", y_des="Avg Loss", y1_des="Test Loss", y2_des="Train Loss")
-
+        return total_time
     def validation_loss(self, x_set, y_set, epoch, y_containter, vld_des):
         self.single_epoch_train(trainSet=x_set, labelSet=y_set, needBP=False)
         avg_loss = self.loss / x_set.shape[0]
