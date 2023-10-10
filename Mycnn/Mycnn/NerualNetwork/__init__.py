@@ -47,7 +47,8 @@ class Layer(ABC):
 
 
 class FCLayer(Layer):
-    def __init__(self, in_feature: int, out_feature: int, act_func: act.ActivationFunc) -> None:
+    # 默认参数满足0,1区间内概率95%
+    def __init__(self, in_feature: int, out_feature: int, act_func: act.ActivationFunc, mean=0.5, dev=0.25) -> None:
         # in_feature 输入神经元数量
         # out_feature 输出神经元数量
         # 输入数据
@@ -58,8 +59,10 @@ class FCLayer(Layer):
         # 输出求导
         self.partialOutput = np.zeros(shape=(out_feature, 1))
         # 参数
-        self.weight = np.random.randn(in_feature, out_feature)
-        self.bias = np.random.randn(out_feature, 1)
+        # self.weight = np.random.randn(in_feature, out_feature)
+        # self.bias = np.random.randn(out_feature, 1)
+        self.weight = np.random.normal(mean, dev, (in_feature, out_feature))
+        self.bias = np.random.normal(mean, dev, (out_feature, 1))
         # 参数梯度
         self.partialWeight = np.zeros(shape=(in_feature, out_feature))
         self.partialBias = np.zeros(shape=(out_feature, 1))
@@ -93,7 +96,7 @@ class FCLayer(Layer):
         # print('This is SBP')
         # partialLoss  传入损失函数的导数
         # 再计算激活函数导数
-        self.partialFunc = self.actFunc.backProp(self.output,self.funcOutput)
+        self.partialFunc = self.actFunc.backProp(self.output, self.funcOutput)
         self.partialOutput = partialLoss * self.partialFunc  # 内积
 
         self.partialWeight += self.input @ self.partialOutput.T  # 使用+=来累积一个batch内的梯度
@@ -104,7 +107,7 @@ class FCLayer(Layer):
         # idx 为当前层原本的层号
         layerNext = layers[idx+1]
         # 激活函数关于输出的求导
-        self.partialFunc = self.actFunc.backProp(self.output,self.funcOutput)
+        self.partialFunc = self.actFunc.backProp(self.output, self.funcOutput)
         self.partialOutput = (
             layerNext.weight @ layerNext.partialOutput) * self.partialFunc
         self.partialWeight += self.input @ self.partialOutput.T
@@ -211,7 +214,7 @@ class Network:
             print(f"--------epoch: {epoch}----------")
             self.single_epoch_train(
                 trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
-            #每space次验证一次
+            # 每space次验证一次
             if (epoch+1) % space == 0:
                 self.loss_tendency_x.append(epoch+1)
                 self.validation_loss(testSet,
@@ -235,31 +238,33 @@ class Network:
         y_containter.append(avg_loss)  # 添加误差
 
     # 专门用于分类验证
-    def classify_validation_loss(self, x_set, y_set, epoch, loss_containter,cr_container ,vld_des):
-        cr = self.classify_single_epoch_train(trainSet=x_set, labelSet=y_set, needBP=False)
+    def classify_validation_loss(self, x_set, y_set, epoch, loss_containter, cr_container, vld_des):
+        cr = self.classify_single_epoch_train(
+            trainSet=x_set, labelSet=y_set, needBP=False)
         avg_loss = self.loss / x_set.shape[0]
         print(
             f'{vld_des } :{self.loss}  Avg Loss :{avg_loss} Correct Ratio: {cr} Progress: {epoch+1} / {self.epochs}')
         loss_containter.append(avg_loss)  # 添加误差
-        cr_container.append(cr) # 添加正确率
+        cr_container.append(cr)  # 添加正确率
 
     # 专门用于分类的训练，最后返回计算正确率
     def classify_single_epoch_train(self, trainSet, labelSet, needBP):
         self.clearLoss()
-        total_num = len(trainSet) 
-        correct_num = 0 # 记录正确性
+        total_num = len(trainSet)
+        correct_num = 0  # 记录正确性
         assert (len(trainSet) == len(labelSet))
         batchCounter = 0
         if needBP:
-            print("BP")
+            print("BP__________________")
             for idx, trainData in enumerate(trainSet):
                 # 前向传播
                 res = self.forward(trainData)
                 # 计算误差
                 self.calcLoss(res, labelSet[idx])
                 # 是否分类正确
+                # print(idx ,np.argmax(res))
                 if (np.argmax(res) == np.argmax(labelSet[idx])):
-                    correct_num = correct_num +1
+                    correct_num = correct_num + 1
                 # 反向传播计算并累积梯度
                 self.backProp(labelSet[idx])
                 # 一个batch进行梯度更新
@@ -275,7 +280,7 @@ class Network:
                 batchCounter += 1
 
         else:  # 只进行前向传播 同时计算正确率
-            print("No BP")
+            print("No BP__________________")
             for idx, trainData in enumerate(trainSet):
                 # 前向传播
                 res = self.forward(trainData)
@@ -283,29 +288,28 @@ class Network:
                 self.calcLoss(res, labelSet[idx])
                 # 是否分类正确
                 if (np.argmax(res) == np.argmax(labelSet[idx])):
-                    correct_num = correct_num +1
+                    correct_num = correct_num + 1
         return correct_num / total_num
-    
+
     def classify_train(self, trainSet, trainLabelSet, testSet, testLabelSet):
         start_time = time.time()
         # space = int(self.epochs / 20)  # 每5%进行一次测试
-        space = 5 # 每5epoch进行测试
-        train_correct_ratio = [] #记录正确率
-        test_correct_ratio = [] #记录正确率
+        space = 5  # 每5epoch进行测试
+        train_correct_ratio = []  # 记录正确率
+        test_correct_ratio = []  # 记录正确率
         for epoch in range(self.epochs+1):
             print(f"--------epoch: {epoch}----------")
             cr = self.classify_single_epoch_train(
                 trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
             print(cr)
-            #每space次验证一次
+            # 每space次验证一次
             if (epoch+1) % space == 0:
                 self.loss_tendency_x.append(epoch+1)
                 self.classify_validation_loss(testSet,
-                                     testLabelSet, epoch, self.test_loss_tendency_y, test_correct_ratio,"Test Loss")
+                                              testLabelSet, epoch, self.test_loss_tendency_y, test_correct_ratio, "Test Loss")
                 self.classify_validation_loss(trainSet,
-                                     trainLabelSet, epoch, self.train_loss_tendency_y,train_correct_ratio, "Train Loss")
+                                              trainLabelSet, epoch, self.train_loss_tendency_y, train_correct_ratio, "Train Loss")
             self.clearLoss()
-
 
         end_time = time.time()
         total_time = int(end_time - start_time)

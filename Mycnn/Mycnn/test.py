@@ -1,6 +1,7 @@
 import NerualNetwork as nn
 import numpy as np
 
-x= np.array([0,255,25.5,0])
-y= np.array([255,0,255,0])
-print(x.dtype)
+mean = 0.005
+dev = 0.0025
+m = np.random.normal(mean, dev, (4, 3))
+print(m)
