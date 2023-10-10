@@ -2,13 +2,14 @@ import numpy as np
 from abc import abstractclassmethod
 from abc import ABC
 
+
 class ActivationFunc(ABC):
     @classmethod
-    def forward(self, x):
+    def forward(self, funcInput: np.ndarray):
         pass
 
     @classmethod
-    def backProp(self, x):
+    def backProp(self, funcInput: np.ndarray, funcOutput: np.ndarray):
         pass
 
 # ReLU部分
@@ -28,25 +29,25 @@ ReLuPartial_Vectorized = np.vectorize(ReLuPartial_Single)
 
 class ReLu(ActivationFunc):
     @classmethod
-    def forward(self, x: np.ndarray):
+    def forward(self, funcInput: np.ndarray):
         # 返回正向传播结果
-        return ReLu_Vectorized(x)
+        return ReLu_Vectorized(funcInput)
 
     @classmethod
-    def backProp(self, x: np.ndarray):
-        return ReLuPartial_Vectorized(x)
+    def backProp(self, funcInput: np.ndarray, funcOutput: np.ndarray):
+        return ReLuPartial_Vectorized(funcInput)
 # 幂等映射
 
 
 class Idempotent(ActivationFunc):
     @classmethod
-    def forward(self, x: np.ndarray):
-        assert (x.shape[1] == 1)  # 确保是个列向量
-        return x
+    def forward(self, funcInput: np.ndarray):
+        assert (funcInput.shape[1] == 1)  # 确保是个列向量
+        return funcInput
 
     @classmethod
-    def backProp(self, x: np.ndarray):
-        return np.ones_like(x)
+    def backProp(self, funcInput: np.ndarray, funcOutput: np.ndarray):
+        return np.ones_like(funcInput)
 
 # Sigmoid
 
@@ -66,10 +67,22 @@ SigmoidPartial_Vectorized = np.vectorize(SigmoidPartial_Single)
 
 class Sigmoid(ActivationFunc):
     @classmethod
-    def forward(self, x: np.ndarray):
+    def forward(self, funcInput: np.ndarray):
         # 返回正向传播结果
-        return Sigmoid_Vectorized(x)
+        return Sigmoid_Vectorized(funcInput)
 
     @classmethod
-    def backProp(self, x: np.ndarray):
-        return SigmoidPartial_Vectorized(x)
+    def backProp(self, funcInput: np.ndarray, funcOutput: np.ndarray):
+        return funcOutput*(1-funcOutput)
+
+
+class Softmax(ActivationFunc):
+    @classmethod
+    def forward(self, funcInput: np.ndarray):
+        e_funcInput = np.exp(funcInput - np.max(funcInput))
+        return e_funcInput / np.sum(e_funcInput)
+
+    @classmethod
+    def backProp(self, funcInput: np.ndarray, funcOutput: np.ndarray):
+        # Softmax的导数放在CE里计算了，这里直接掠过
+        return np.ones_like(funcInput)

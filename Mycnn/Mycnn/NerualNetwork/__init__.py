@@ -22,7 +22,7 @@ class Layer(ABC):
         pass
 
     @abstractclassmethod
-    def specialBP(self, x):
+    def specialBP(self, partialLoss: np.ndarray):
         pass
 
     @abstractclassmethod
@@ -54,6 +54,7 @@ class FCLayer(Layer):
         self.input = np.zeros(shape=(in_feature, 1))
         # 输出结果
         self.output = np.zeros(shape=(out_feature, 1))
+        self.funcOutput = np.zeros(shape=(out_feature, 1))  # 经过激活函数的结果
         # 输出求导
         self.partialOutput = np.zeros(shape=(out_feature, 1))
         # 参数
@@ -79,20 +80,20 @@ class FCLayer(Layer):
 
     def forward(self, x):
         # 记录输出、输入
-
         assert (self.input.shape[0] == x.shape[0])
         assert (self.input.shape[1] == x.shape[1])
         self.input = x
         self.output = self.weight.T @ x+self.bias
-        return self.actFunc.forward(self.output)
+        self.funcOutput = self.actFunc.forward(self.output)
+        return self.funcOutput
 
-    def specialBP(self, labelY):
+    def specialBP(self, partialLoss):
 
         # 计算关于输出
         # print('This is SBP')
-        partialLoss = (self.output - labelY)  # MSE的导数
-        # 计算激活函数导数
-        self.partialFunc = self.actFunc.backProp(self.output)
+        # partialLoss  传入损失函数的导数
+        # 再计算激活函数导数
+        self.partialFunc = self.actFunc.backProp(self.output,self.funcOutput)
         self.partialOutput = partialLoss * self.partialFunc  # 内积
 
         self.partialWeight += self.input @ self.partialOutput.T  # 使用+=来累积一个batch内的梯度
@@ -103,7 +104,7 @@ class FCLayer(Layer):
         # idx 为当前层原本的层号
         layerNext = layers[idx+1]
         # 激活函数关于输出的求导
-        self.partialFunc = self.actFunc.backProp(self.output)
+        self.partialFunc = self.actFunc.backProp(self.output,self.funcOutput)
         self.partialOutput = (
             layerNext.weight @ layerNext.partialOutput) * self.partialFunc
         self.partialWeight += self.input @ self.partialOutput.T
@@ -114,7 +115,7 @@ class FCLayer(Layer):
 
 
 class Network:
-    def __init__(self, loss_func, batch_size=1, lr=0.001, epochs=100,) -> None:
+    def __init__(self, loss_func: ls.Loss, batch_size=1, lr=0.001, epochs=100,) -> None:
         assert (batch_size >= 1)
         self.layers: List[Layer] = []
         self.loss = 0
@@ -140,7 +141,7 @@ class Network:
         return x
 
     def calcLoss(self, y_hat, y_label):
-        self.loss += self.loss_func(y_hat, y_label)
+        self.loss += self.loss_func.calcLoss(y_hat, y_label)
 
     # 所有层的梯度清零
     def clearPartial(self):
@@ -156,7 +157,9 @@ class Network:
         assert (layerNum >= 1)
         for idx, layer in enumerate(reversed(self.layers)):
             if idx == 0:
-                layer.specialBP(labelY)
+                partialLoss = self.loss_func.partialLoss(
+                    layer.funcOutput, labelY)
+                layer.specialBP(partialLoss)
             else:
                 # layerNum-1-idx是原来其在网络结构中的序号，方便利用nextLayer的数据
                 layer.backProp(self.layers, layerNum-1-idx)
@@ -215,14 +218,15 @@ class Network:
                                      testLabelSet, epoch, self.test_loss_tendency_y, "Test Loss")
                 self.validation_loss(trainSet,
                                      trainLabelSet, epoch, self.train_loss_tendency_y, "Train Loss")
-            self.clearLoss() 
+            self.clearLoss()
         end_time = time.time()
-        total_time = int(end_time - start_time)    
+        total_time = int(end_time - start_time)
         print(f'Total time: {total_time}')
         # 绘制Loss曲线
         dl.drawPlot(x=self.loss_tendency_x, y1=self.test_loss_tendency_y, y2=self.train_loss_tendency_y,
                     title='Loss Tendency', x_des="Epoch", y_des="Avg Loss", y1_des="Test Loss", y2_des="Train Loss")
         return total_time
+
     def validation_loss(self, x_set, y_set, epoch, y_containter, vld_des):
         self.single_epoch_train(trainSet=x_set, labelSet=y_set, needBP=False)
         avg_loss = self.loss / x_set.shape[0]
