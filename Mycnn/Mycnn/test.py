@@ -1,8 +1,6 @@
 import NerualNetwork as nn
 import numpy as np
 
-x = np.array([0.1, 0.9, 0.5]).reshape(-1, 1)
-# y = np.array([0, 1, 0]).reshape(-1, 1)
-# print(nn.ls.CE.partialLoss(x, x, y))
-
-print(nn.act.Sigmoid.backProp(x, x))
+x= np.array([0,255,25.5,0])
+y= np.array([255,0,255,0])
+print(x.dtype)

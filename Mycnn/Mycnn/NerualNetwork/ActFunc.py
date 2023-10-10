@@ -84,5 +84,5 @@ class Softmax(ActivationFunc):
 
     @classmethod
     def backProp(self, funcInput: np.ndarray, funcOutput: np.ndarray):
-        # Softmax的导数放在CE里计算了，这里直接掠过
+        # Softmax的导数放在CE里计算了，这里直接略过
         return np.ones_like(funcInput)

@@ -184,11 +184,11 @@ class Network:
                         batchCounter, self.loss, self.batch_size, idx, total_num)
                     batchCounter += 1
             # 对于残余部分进行梯度更新
-                deltaNum = len(trainSet) - batchCounter*self.batch_size
-                if deltaNum > 0:
-                    self.batch_AdjustParam(
-                        batchCounter, self.loss, deltaNum, idx, total_num)
-                    batchCounter += 1
+            deltaNum = len(trainSet) - batchCounter*self.batch_size
+            if deltaNum > 0:
+                self.batch_AdjustParam(
+                    batchCounter, self.loss, deltaNum, idx, total_num)
+                batchCounter += 1
         else:  # 只进行前向传播
             for idx, trainData in enumerate(trainSet):
                 # 前向传播
@@ -206,12 +206,12 @@ class Network:
 
     def train(self, trainSet, trainLabelSet, testSet, testLabelSet):
         start_time = time.time()
-        space = self.epochs / 20  # 每5%进行一次测试
+        space = int(self.epochs / 20)  # 每5%进行一次测试
         for epoch in range(self.epochs+1):
             print(f"--------epoch: {epoch}----------")
             self.single_epoch_train(
                 trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
-            # # 每space次验证一次
+            #每space次验证一次
             if (epoch+1) % space == 0:
                 self.loss_tendency_x.append(epoch+1)
                 self.validation_loss(testSet,
@@ -233,3 +233,87 @@ class Network:
         print(
             f'{vld_des } :{self.loss}  Avg Loss :{avg_loss} Progress: {epoch+1} / {self.epochs}')
         y_containter.append(avg_loss)  # 添加误差
+
+    # 专门用于分类验证
+    def classify_validation_loss(self, x_set, y_set, epoch, loss_containter,cr_container ,vld_des):
+        cr = self.classify_single_epoch_train(trainSet=x_set, labelSet=y_set, needBP=False)
+        avg_loss = self.loss / x_set.shape[0]
+        print(
+            f'{vld_des } :{self.loss}  Avg Loss :{avg_loss} Correct Ratio: {cr} Progress: {epoch+1} / {self.epochs}')
+        loss_containter.append(avg_loss)  # 添加误差
+        cr_container.append(cr) # 添加正确率
+
+    # 专门用于分类的训练，最后返回计算正确率
+    def classify_single_epoch_train(self, trainSet, labelSet, needBP):
+        self.clearLoss()
+        total_num = len(trainSet) 
+        correct_num = 0 # 记录正确性
+        assert (len(trainSet) == len(labelSet))
+        batchCounter = 0
+        if needBP:
+            print("BP")
+            for idx, trainData in enumerate(trainSet):
+                # 前向传播
+                res = self.forward(trainData)
+                # 计算误差
+                self.calcLoss(res, labelSet[idx])
+                # 是否分类正确
+                if (np.argmax(res) == np.argmax(labelSet[idx])):
+                    correct_num = correct_num +1
+                # 反向传播计算并累积梯度
+                self.backProp(labelSet[idx])
+                # 一个batch进行梯度更新
+                if (idx+1) % self.batch_size == 0:
+                    self.batch_AdjustParam(
+                        batchCounter, self.loss, self.batch_size, idx, total_num)
+                    batchCounter += 1
+            # 对于残余部分进行梯度更新
+            deltaNum = len(trainSet) - batchCounter*self.batch_size
+            if deltaNum > 0:
+                self.batch_AdjustParam(
+                    batchCounter, self.loss, deltaNum, idx, total_num)
+                batchCounter += 1
+
+        else:  # 只进行前向传播 同时计算正确率
+            print("No BP")
+            for idx, trainData in enumerate(trainSet):
+                # 前向传播
+                res = self.forward(trainData)
+                # 计算误差
+                self.calcLoss(res, labelSet[idx])
+                # 是否分类正确
+                if (np.argmax(res) == np.argmax(labelSet[idx])):
+                    correct_num = correct_num +1
+        return correct_num / total_num
+    
+    def classify_train(self, trainSet, trainLabelSet, testSet, testLabelSet):
+        start_time = time.time()
+        # space = int(self.epochs / 20)  # 每5%进行一次测试
+        space = 5 # 每5epoch进行测试
+        train_correct_ratio = [] #记录正确率
+        test_correct_ratio = [] #记录正确率
+        for epoch in range(self.epochs+1):
+            print(f"--------epoch: {epoch}----------")
+            cr = self.classify_single_epoch_train(
+                trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
+            print(cr)
+            #每space次验证一次
+            if (epoch+1) % space == 0:
+                self.loss_tendency_x.append(epoch+1)
+                self.classify_validation_loss(testSet,
+                                     testLabelSet, epoch, self.test_loss_tendency_y, test_correct_ratio,"Test Loss")
+                self.classify_validation_loss(trainSet,
+                                     trainLabelSet, epoch, self.train_loss_tendency_y,train_correct_ratio, "Train Loss")
+            self.clearLoss()
+
+
+        end_time = time.time()
+        total_time = int(end_time - start_time)
+        print(f'Total time: {total_time}')
+        # 绘制Loss曲线
+        dl.drawPlot(x=self.loss_tendency_x, y1=self.test_loss_tendency_y, y2=self.train_loss_tendency_y,
+                    title='Loss Tendency', x_des="Epoch", y_des="Avg Loss", y1_des="Test Loss", y2_des="Train Loss")
+        # 绘制准确率曲线
+        dl.drawPlot(x=self.loss_tendency_x, y1=train_correct_ratio, y2=test_correct_ratio,
+                    title='Correct Ratio Tendency', x_des="Epoch", y_des="Correct Ratio", y1_des="Train CR", y2_des="Test CR")
+        return total_time

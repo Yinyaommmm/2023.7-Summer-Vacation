@@ -6,7 +6,7 @@ train_X, train_y, test_X, test_y = nn.dl.createTrainAndTest(size=500)
 
 # set random seed
 np.random.seed(42)
-epochs = 2000
+epochs = 800
 lr = 0.01
 num1 = 20
 num2 = 10
