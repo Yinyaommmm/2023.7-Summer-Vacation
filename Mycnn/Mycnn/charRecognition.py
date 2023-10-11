@@ -4,7 +4,7 @@ import numpy as np
 
 # 将所有图片载入数据
 X_train, y_train, X_test, y_test = nn.dl.load_data(
-    "train", num_train_samples=50, num_test_samples=2)
+    "train", num_train_samples=50, num_test_samples=10)
 # X_train (6000,784,1) X_test (1440,784,1)
 # y_train (6000,12,1) y_test (1440,784,1)
 

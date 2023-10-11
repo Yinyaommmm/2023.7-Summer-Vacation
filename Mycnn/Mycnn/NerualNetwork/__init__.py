@@ -76,10 +76,11 @@ class FCLayer(Layer):
 
     # 梯度清零，方便下一个Batch
     def clearPartial(self):
-        self.partialBias = np.zeros_like(self.partialBias)
+
         self.partialFunc = np.zeros_like(self.partialFunc)
         self.partialOutput = np.zeros_like(self.partialOutput)
         self.partialWeight = np.zeros_like(self.partialWeight)
+        self.partialBias = np.zeros_like(self.partialBias)
 
     def forward(self, x):
         # 记录输出、输入
