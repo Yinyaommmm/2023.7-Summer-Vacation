@@ -1,10 +1,11 @@
 import NerualNetwork as nn
 import numpy as np
+import sys
 
 
 # 将所有图片载入数据
 X_train, y_train, X_test, y_test = nn.dl.load_data(
-    "train", num_train_samples=50, num_test_samples=10)
+    "train", num_train_samples=100, num_test_samples=10)
 # X_train (6000,784,1) X_test (1440,784,1)
 # y_train (6000,12,1) y_test (1440,784,1)
 
@@ -12,11 +13,11 @@ X_train, y_train, X_test, y_test = nn.dl.load_data(
 np.random.seed(42)
 pic_size = 28 * 28
 char_class_num = 12
-epochs = 100
-lr = 0.001
+epochs = 10
+lr = 0.01
 num1 = 128
-num2 = 32
-batch_size = 10
+num2 = 64
+batch_size = 20
 nw = nn.Network(loss_func=nn.ls.CE, batch_size=batch_size,
                 lr=lr, epochs=epochs,)
 l1 = nn.FCLayer(in_feature=pic_size, out_feature=num1,
@@ -29,15 +30,17 @@ nw.add(l1)
 nw.add(l2)
 nw.add(l3)
 
+sys.stdout = open('output.txt','w')
 total_time = 0
-
 total_time = nw.classify_train(X_train, y_train, X_test, y_test)
-print("layer 2")
-print(nw.layers[2].input)
-print(nw.layers[2].output)
-print(nw.layers[2].bias)
-print(np.argmax((nw.layers[2].funcOutput)))
-print("layer 1")
-print(nw.layers[1].input)
-print(nw.layers[1].output)
-print(nw.layers[1].bias)
+
+c = 0
+for idx,testData in enumerate(X_test):
+    res = nw.forward(testData)
+    t_r = np.argmax(res)
+    t_y = np.argmax(y_test[idx])
+    print(f"idx {idx} res:{t_r} std:{t_y}")
+    if (t_r ==  t_y):
+        c= c+1
+print(f"Cr: {c/len(X_test)}")
+

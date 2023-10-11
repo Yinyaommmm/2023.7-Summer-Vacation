@@ -76,9 +76,9 @@ class FCLayer(Layer):
 
     # 梯度清零，方便下一个Batch
     def clearPartial(self):
-
-        self.partialFunc = np.zeros_like(self.partialFunc)
-        self.partialOutput = np.zeros_like(self.partialOutput)
+        # 只清除累积值
+        # self.partialFunc = np.zeros_like(self.partialFunc)
+        # self.partialOutput = np.zeros_like(self.partialOutput)
         self.partialWeight = np.zeros_like(self.partialWeight)
         self.partialBias = np.zeros_like(self.partialBias)
 
@@ -91,7 +91,7 @@ class FCLayer(Layer):
         self.funcOutput = self.actFunc.forward(self.output)
         return self.funcOutput
 
-    def specialBP(self, partialLoss):
+    def specialBP(self, partialLoss:np.ndarray):
 
         # 计算关于输出
         # print('This is SBP')
@@ -130,6 +130,8 @@ class Network:
         self.test_loss_tendency_y = []
         self.train_loss_tendency_y = []
         self.loss_func = loss_func
+
+        self.amnos = 0
 
     def add(self, layer: Layer):
         self.layers.append(layer)
@@ -256,20 +258,31 @@ class Network:
         assert (len(trainSet) == len(labelSet))
         batchCounter = 0
         if needBP:
-            print("BP__________________")
             for idx, trainData in enumerate(trainSet):
                 # 前向传播
                 res = self.forward(trainData)
                 # 计算误差
                 self.calcLoss(res, labelSet[idx])
                 # 是否分类正确
-                # print(idx ,np.argmax(res))
                 if (np.argmax(res) == np.argmax(labelSet[idx])):
                     correct_num = correct_num + 1
                 # 反向传播计算并累积梯度
                 self.backProp(labelSet[idx])
                 # 一个batch进行梯度更新
                 if (idx+1) % self.batch_size == 0:
+                    print(f'No. {self.amnos} adjus__________________________________{batchCounter} batch')
+                    for i in [2,1,0]:
+                        print(f'Layer{i} Partial')
+                        print(f'{i}-partial weight {self.layers[i].partialWeight[0] / self.batch_size}')
+                        print(f'{i}-partial bias {self.layers[i].partialBias[0:3]/ self.batch_size}')
+                        print(f'{i}-partial func {self.layers[i].partialFunc[0:3]}')
+                        print(f'{i}-PartialOut {self.layers[i].partialOutput[0:10]}\n')
+                        print(f'{i}-Input {self.layers[i].input[0:10]}\n')
+                        print(f'{i}-Output {self.layers[i].output[0:12]}\n')
+                        print(f'{i}-OutputFunc {self.layers[i].funcOutput[0:12]}\n')
+                        print(f'{i}-Weight {self.layers[i].weight[0]}\n')
+                        print(f'{i}-Bias {self.layers[i].bias[0:3]}\n')
+                    self.amnos= self.amnos+1
                     self.batch_AdjustParam(
                         batchCounter, self.loss, self.batch_size, idx, total_num)
                     batchCounter += 1
@@ -281,12 +294,14 @@ class Network:
                 batchCounter += 1
 
         else:  # 只进行前向传播 同时计算正确率
-            print("No BP__________________")
             for idx, trainData in enumerate(trainSet):
                 # 前向传播
                 res = self.forward(trainData)
                 # 计算误差
                 self.calcLoss(res, labelSet[idx])
+                # t_r = np.argmax(res)
+                # t_y = np.argmax(labelSet[idx])
+                # print(f"idx {idx} res:{t_r} std:{t_y}")
                 # 是否分类正确
                 if (np.argmax(res) == np.argmax(labelSet[idx])):
                     correct_num = correct_num + 1
@@ -298,7 +313,7 @@ class Network:
         space = 5  # 每5epoch进行测试
         train_correct_ratio = []  # 记录正确率
         test_correct_ratio = []  # 记录正确率
-        for epoch in range(self.epochs+1):
+        for epoch in range(self.epochs):
             print(f"--------epoch: {epoch}----------")
             cr = self.classify_single_epoch_train(
                 trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
@@ -308,8 +323,8 @@ class Network:
                 self.loss_tendency_x.append(epoch+1)
                 self.classify_validation_loss(testSet,
                                               testLabelSet, epoch, self.test_loss_tendency_y, test_correct_ratio, "Test Loss")
-                self.classify_validation_loss(trainSet,
-                                              trainLabelSet, epoch, self.train_loss_tendency_y, train_correct_ratio, "Train Loss")
+                # self.classify_validation_loss(trainSet,
+                #                               trainLabelSet, epoch, self.train_loss_tendency_y, train_correct_ratio, "Train Loss")
             self.clearLoss()
 
         end_time = time.time()
