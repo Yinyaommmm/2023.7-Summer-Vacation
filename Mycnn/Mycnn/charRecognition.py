@@ -10,22 +10,27 @@ X_train, y_train, X_test, y_test = nn.dl.load_data(
 # y_train (6000,12,1) y_test (1440,784,1)
 
 
+# Hyper Parameter
 np.random.seed(42)
 pic_size = 28 * 28
 char_class_num = 12
-epochs = 30
-lr = 0.01
+epochs = 2000
+lr = 0.001
 num1 = 128
 num2 = 64
 batch_size = 100
+mean = 0
+dev = 0.2
+
+# Build Network
 nw = nn.Network(loss_func=nn.ls.CE, batch_size=batch_size,
                 lr=lr, epochs=epochs,)
 l1 = nn.FCLayer(in_feature=pic_size, out_feature=num1,
-                act_func=nn.act.ReLu, mean=0.1, dev=0.25)
+                act_func=nn.act.ReLu, mean=mean, dev=dev)
 l2 = nn.FCLayer(in_feature=num1, out_feature=num2,
-                act_func=nn.act.ReLu, mean=0.1, dev=0.25)
+                act_func=nn.act.ReLu, mean=mean, dev=dev)
 l3 = nn.FCLayer(in_feature=num2, out_feature=char_class_num,
-                act_func=nn.act.Softmax, mean=0.1, dev=0.25)
+                act_func=nn.act.Softmax, mean=mean, dev=dev)
 nw.add(l1)
 nw.add(l2)
 nw.add(l3)
@@ -34,12 +39,3 @@ nw.add(l3)
 total_time = 0
 total_time = nw.classify_train(X_train, y_train, X_test, y_test)
 
-# c = 0
-# for idx, testData in enumerate(X_test):
-#     res = nw.forward(testData)
-#     t_r = np.argmax(res)
-#     t_y = np.argmax(y_test[idx])
-#     print(f"idx {idx} res:{t_r} std:{t_y}")
-#     if (t_r == t_y):
-#         c = c+1
-# print(f"Cr: {c/len(X_test)}")

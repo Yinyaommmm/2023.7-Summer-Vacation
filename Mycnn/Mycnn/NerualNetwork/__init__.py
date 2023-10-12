@@ -10,6 +10,10 @@ import NerualNetwork.DataDealing as dl
 import time
 # 层虚基类
 
+class TrainResult:
+    def __init__(self, epochs , test_loss,train_loss) -> None:
+        pass
+
 
 class Layer(ABC):
     @abstractclassmethod
@@ -239,7 +243,7 @@ class Network:
         self.single_epoch_train(trainSet=x_set, labelSet=y_set, needBP=False)
         avg_loss = self.loss / x_set.shape[0]
         print(
-            f'{vld_des } :{self.loss}  Avg Loss :{avg_loss} Progress: {epoch+1} / {self.epochs}')
+            f'{vld_des }: {self.loss}  Avg Loss: {avg_loss} Progress: {epoch+1} / {self.epochs}')
         y_containter.append(avg_loss)  # 添加误差
 
     # 专门用于分类验证
@@ -272,20 +276,8 @@ class Network:
                 self.backProp(labelSet[idx])
                 # 一个batch进行梯度更新
                 if (idx+1) % self.batch_size == 0:
-                    # print(
-                    # f'No. {self.amnos} adjus__________________________________{batchCounter} batch')
-                    # for i in [2,1,0]:
-                    #     print(f'Layer{i} Partial')
-                    #     print(f'{i}-partial weight {self.layers[i].partialWeight[0] / self.batch_size}')
-                    #     print(f'{i}-partial bias {self.layers[i].partialBias[0:3]/ self.batch_size}')
-                    #     print(f'{i}-partial func {self.layers[i].partialFunc[0:3]}')
-                    #     print(f'{i}-PartialOut {self.layers[i].partialOutput[0:10]}\n')
-                    #     print(f'{i}-Input {self.layers[i].input[0:10]}\n')
-                    #     print(f'{i}-Output {self.layers[i].output[0:12]}\n')
-                    #     print(f'{i}-OutputFunc {self.layers[i].funcOutput[0:12]}\n')
-                    #     print(f'{i}-Weight {self.layers[i].weight[0]}\n')
-                    #     print(f'{i}-Bias {self.layers[i].bias[0:3]}\n')
-                    self.amnos = self.amnos+1
+                    # xx
+                    # self.layerInfo(batchCounter)
                     self.batch_AdjustParam(
                         batchCounter, self.loss, self.batch_size, idx, total_num)
                     batchCounter += 1
@@ -341,3 +333,19 @@ class Network:
         dl.drawPlot(x=self.loss_tendency_x, y1=train_correct_ratio, y2=test_correct_ratio,
                     title='Correct Ratio Tendency', x_des="Epoch", y_des="Correct Ratio", y1_des="Train CR", y2_des="Test CR")
         return total_time
+    
+    def layerInfo(self,batch_counter):
+        if self.amnos % 5 == 0:
+            print(f'No. {self.amnos} adjust from batch {batch_counter}__________________________________)')
+            for i in [2,1,0]:
+                print(f'Layer{i} Partial')
+                print(f'{i}-partial weight {self.layers[i].partialWeight[0] / self.batch_size}')
+                print(f'{i}-partial bias {self.layers[i].partialBias[0:3]/ self.batch_size}')
+                print(f'{i}-partial func {self.layers[i].partialFunc[0:3]}')
+                print(f'{i}-PartialOut {self.layers[i].partialOutput[0:10]}\n')
+                print(f'{i}-Input {self.layers[i].input[0:10]}\n')
+                print(f'{i}-Output {self.layers[i].output[0:12]}\n')
+                print(f'{i}-OutputFunc {self.layers[i].funcOutput[0:12]}\n')
+                print(f'{i}-Weight {self.layers[i].weight[0]}\n')
+                print(f'{i}-Bias {self.layers[i].bias[0:3]}\n')
+        self.amnos = self.amnos+1
