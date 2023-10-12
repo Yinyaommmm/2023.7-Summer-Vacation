@@ -91,7 +91,7 @@ class FCLayer(Layer):
         self.funcOutput = self.actFunc.forward(self.output)
         return self.funcOutput
 
-    def specialBP(self, partialLoss:np.ndarray):
+    def specialBP(self, partialLoss: np.ndarray):
 
         # 计算关于输出
         # print('This is SBP')
@@ -179,6 +179,8 @@ class Network:
             for idx, trainData in enumerate(trainSet):
                 # 前向传播
                 res = self.forward(trainData)
+                print(
+                    f"No.{idx} trainData, R/S: {np.argmax(res)} / {np.argmax(labelSet[idx])} ")
                 # 计算误差
                 self.calcLoss(res, labelSet[idx])
 
@@ -270,19 +272,20 @@ class Network:
                 self.backProp(labelSet[idx])
                 # 一个batch进行梯度更新
                 if (idx+1) % self.batch_size == 0:
-                    print(f'No. {self.amnos} adjus__________________________________{batchCounter} batch')
-                    for i in [2,1,0]:
-                        print(f'Layer{i} Partial')
-                        print(f'{i}-partial weight {self.layers[i].partialWeight[0] / self.batch_size}')
-                        print(f'{i}-partial bias {self.layers[i].partialBias[0:3]/ self.batch_size}')
-                        print(f'{i}-partial func {self.layers[i].partialFunc[0:3]}')
-                        print(f'{i}-PartialOut {self.layers[i].partialOutput[0:10]}\n')
-                        print(f'{i}-Input {self.layers[i].input[0:10]}\n')
-                        print(f'{i}-Output {self.layers[i].output[0:12]}\n')
-                        print(f'{i}-OutputFunc {self.layers[i].funcOutput[0:12]}\n')
-                        print(f'{i}-Weight {self.layers[i].weight[0]}\n')
-                        print(f'{i}-Bias {self.layers[i].bias[0:3]}\n')
-                    self.amnos= self.amnos+1
+                    # print(
+                    # f'No. {self.amnos} adjus__________________________________{batchCounter} batch')
+                    # for i in [2,1,0]:
+                    #     print(f'Layer{i} Partial')
+                    #     print(f'{i}-partial weight {self.layers[i].partialWeight[0] / self.batch_size}')
+                    #     print(f'{i}-partial bias {self.layers[i].partialBias[0:3]/ self.batch_size}')
+                    #     print(f'{i}-partial func {self.layers[i].partialFunc[0:3]}')
+                    #     print(f'{i}-PartialOut {self.layers[i].partialOutput[0:10]}\n')
+                    #     print(f'{i}-Input {self.layers[i].input[0:10]}\n')
+                    #     print(f'{i}-Output {self.layers[i].output[0:12]}\n')
+                    #     print(f'{i}-OutputFunc {self.layers[i].funcOutput[0:12]}\n')
+                    #     print(f'{i}-Weight {self.layers[i].weight[0]}\n')
+                    #     print(f'{i}-Bias {self.layers[i].bias[0:3]}\n')
+                    self.amnos = self.amnos+1
                     self.batch_AdjustParam(
                         batchCounter, self.loss, self.batch_size, idx, total_num)
                     batchCounter += 1
@@ -315,6 +318,7 @@ class Network:
         test_correct_ratio = []  # 记录正确率
         for epoch in range(self.epochs):
             print(f"--------epoch: {epoch}----------")
+            trainSet, trainLabelSet = dl.data_shuffle(trainSet, trainLabelSet)
             cr = self.classify_single_epoch_train(
                 trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
             print(cr)
@@ -323,8 +327,8 @@ class Network:
                 self.loss_tendency_x.append(epoch+1)
                 self.classify_validation_loss(testSet,
                                               testLabelSet, epoch, self.test_loss_tendency_y, test_correct_ratio, "Test Loss")
-                # self.classify_validation_loss(trainSet,
-                #                               trainLabelSet, epoch, self.train_loss_tendency_y, train_correct_ratio, "Train Loss")
+                self.classify_validation_loss(trainSet,
+                                              trainLabelSet, epoch, self.train_loss_tendency_y, train_correct_ratio, "Train Loss")
             self.clearLoss()
 
         end_time = time.time()

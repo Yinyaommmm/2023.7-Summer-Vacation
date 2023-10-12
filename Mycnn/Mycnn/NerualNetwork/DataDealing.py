@@ -20,6 +20,8 @@ def createTrainAndTest(size):
     return train_X, train_y, test_X, test_y
 
 # 载入图片
+
+
 def load_data(data_dir, num_train_samples=500, num_test_samples=120):
     X_train = []
     y_train = []
@@ -30,7 +32,7 @@ def load_data(data_dir, num_train_samples=500, num_test_samples=120):
         class_folder = os.path.join(data_dir, str(class_label))
 
         # images: 存放image名字的list
-        images = sorted(os.listdir(class_folder))  # 确保按照文件名的顺序加载图片 
+        images = sorted(os.listdir(class_folder))  # 确保按照文件名的顺序加载图片
         # 从每个文件夹中加载500个训练样本
         for i in range(num_train_samples):
             image_file = images[i]
@@ -47,14 +49,15 @@ def load_data(data_dir, num_train_samples=500, num_test_samples=120):
             X_test.append(image)
             y_test.append(class_label - 1)
 
-
     # 修改shape 并且转换数据类型
     pic_size = 28
     char_class_num = 12
-    X_train = np.array(X_train).reshape(num_train_samples*char_class_num , pic_size**2,1)
-    X_test = np.array(X_test).reshape(num_test_samples*char_class_num , pic_size**2,1)
+    X_train = np.array(X_train).reshape(
+        num_train_samples*char_class_num, pic_size**2, 1)
+    X_test = np.array(X_test).reshape(
+        num_test_samples*char_class_num, pic_size**2, 1)
     y_train = np.array(y_train)
-    #.reshape(num_train_samples*char_class_num,char_class_num,1)
+    # .reshape(num_train_samples*char_class_num,char_class_num,1)
     y_test = np.array(y_test)
 
    # 将图像数据归一化到 [0, 1] 的范围
@@ -62,10 +65,22 @@ def load_data(data_dir, num_train_samples=500, num_test_samples=120):
     X_test = X_test / 255.0
 
     # # 使用NumPy手动创建one-hot编码
-    y_train = np.eye(char_class_num)[y_train].reshape(num_train_samples*char_class_num,char_class_num,1)
-    y_test = np.eye(char_class_num)[y_test].reshape(num_test_samples*char_class_num,char_class_num,1)
+    y_train = np.eye(char_class_num)[y_train].reshape(
+        num_train_samples*char_class_num, char_class_num, 1)
+    y_test = np.eye(char_class_num)[y_test].reshape(
+        num_test_samples*char_class_num, char_class_num, 1)
 
     return X_train, y_train, X_test, y_test
+
+# 打乱数据
+
+
+def data_shuffle(trainSet, trainLabelSet):
+    assert (len(trainSet) == len(trainLabelSet))
+    random_indices = np.random.permutation(len(trainSet))
+    trainSet = trainSet[random_indices]
+    trainLabelSet = trainLabelSet[random_indices]
+    return trainSet, trainLabelSet
 
 
 def drawScatter(dataX: np.ndarray, dataY: np.ndarray, predictY: np.ndarray, description: str):
