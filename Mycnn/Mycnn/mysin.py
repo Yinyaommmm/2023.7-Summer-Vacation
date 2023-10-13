@@ -11,11 +11,16 @@ lr = 0.01
 num1 = 20
 num2 = 10
 batch_size = 1
+mean = 0
+dev = 1
 nw = nn.Network(loss_func=nn.ls.MAE, batch_size=batch_size,
-                lr=lr, epochs=epochs,)
-l1 = nn.FCLayer(in_feature=1, out_feature=num1, act_func=nn.act.Sigmoid)
-l2 = nn.FCLayer(in_feature=num1, out_feature=num2, act_func=nn.act.Sigmoid)
-l3 = nn.FCLayer(in_feature=num2, out_feature=1, act_func=nn.act.Idempotent)
+                lr=lr, epochs=epochs)
+l1 = nn.FCLayer(in_feature=1, out_feature=num1,
+                act_func=nn.act.Sigmoid, mean=mean, dev=dev)
+l2 = nn.FCLayer(in_feature=num1, out_feature=num2,
+                act_func=nn.act.Sigmoid, mean=mean, dev=dev)
+l3 = nn.FCLayer(in_feature=num2, out_feature=1,
+                act_func=nn.act.Idempotent, mean=mean, dev=dev)
 nw.add(l1)
 nw.add(l2)
 nw.add(l3)
