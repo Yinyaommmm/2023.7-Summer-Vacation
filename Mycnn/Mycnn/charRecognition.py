@@ -1,4 +1,4 @@
-import NerualNetwork as nn
+import NeuralNetwork as nn
 import numpy as np
 import sys
 
@@ -14,13 +14,13 @@ X_train, y_train, X_test, y_test = nn.dl.load_data(
 np.random.seed(42)
 pic_size = 28 * 28
 char_class_num = 12
-epochs = 600
-lr = 0.001
-num1 = 128
-num2 = 64
-batch_size = 100
+epochs = 40
+lr = 0.01
+num1 = 260
+num2 = 86
+batch_size = 1
 mean = 0
-dev = 0.1
+dev = 0.2
 
 # Build Network
 nw = nn.Network(loss_func=nn.ls.CE, batch_size=batch_size,
@@ -38,3 +38,14 @@ nw.add(l3)
 # sys.stdout = open('output.txt', 'w')
 total_time = 0
 total_time = nw.classify_train(X_train, y_train, X_test, y_test)
+
+nn.dl.save_model(nw,f'{pic_size}-{num1}-{num2}-{char_class_num}-m{mean}d{dev}-b{batch_size}-lr{lr}')
+
+
+# # 读取过往模型
+# model_name = '784-392-196-12-m0d0.2-b1-lr0.01'
+# xx = nn.dl.load_model(model_name);
+# xx.epochs = 10
+# xx.lr = 0.001
+# xx.classify_train(X_train, y_train, X_test, y_test)
+# nn.dl.save_model(xx,model_name)

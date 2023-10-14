@@ -1,32 +1,38 @@
 import numpy as np
-import NerualNetwork as nn
+import NeuralNetwork as nn
 
 train_X, train_y, test_X, test_y = nn.dl.createTrainAndTest(size=500)
 # dl.drawScatter(train_X, train_y, train_y, description="train")
 
 # set random seed
 np.random.seed(42)
-epochs = 2400
+epochs = 200
 lr = 0.01
 num1 = 20
 num2 = 10
 batch_size = 1
 mean = 0
 dev = 1
-nw = nn.Network(loss_func=nn.ls.MAE, batch_size=batch_size,
-                lr=lr, epochs=epochs)
-l1 = nn.FCLayer(in_feature=1, out_feature=num1,
-                act_func=nn.act.Sigmoid, mean=mean, dev=dev)
-l2 = nn.FCLayer(in_feature=num1, out_feature=num2,
-                act_func=nn.act.Sigmoid, mean=mean, dev=dev)
-l3 = nn.FCLayer(in_feature=num2, out_feature=1,
-                act_func=nn.act.Idempotent, mean=mean, dev=dev)
-nw.add(l1)
-nw.add(l2)
-nw.add(l3)
-# 训练模型
+# nw = nn.Network(loss_func=nn.ls.MAE, batch_size=batch_size,
+#                 lr=lr, epochs=epochs)
+# l1 = nn.FCLayer(in_feature=1, out_feature=num1,
+#                 act_func=nn.act.Sigmoid, mean=mean, dev=dev)
+# l2 = nn.FCLayer(in_feature=num1, out_feature=num2,
+#                 act_func=nn.act.Sigmoid, mean=mean, dev=dev)
+# l3 = nn.FCLayer(in_feature=num2, out_feature=1,
+#                 act_func=nn.act.Idempotent, mean=mean, dev=dev)
+# nw.add(l1)
+# nw.add(l2)
+# nw.add(l3)
+# # 训练模型
+# total_time = 0
+# total_time = nw.train(train_X, train_y, test_X, test_y)
+# nn.dl.save_model(nw,'goodSin')
+
+nw = nn.dl.load_model('goodSin')
 total_time = 0
 total_time = nw.train(train_X, train_y, test_X, test_y)
+nn.dl.save_model(nw,'goodSin')
 
 
 # 比较拟合结果
