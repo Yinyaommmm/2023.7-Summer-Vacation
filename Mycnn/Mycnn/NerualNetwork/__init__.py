@@ -12,8 +12,13 @@ import time
 
 
 class TrainResult:
-    def __init__(self, epochs, test_loss, train_loss) -> None:
-        pass
+    def __init__(self, time, epochs, test_loss, train_loss, test_cr, train_cr) -> None:
+        self.time = time
+        self.epochs = epochs
+        self.time = time
+        self.time = time
+        self.time = time
+        self.time = time
 
 
 class Layer(ABC):
@@ -74,10 +79,15 @@ class FCLayer(Layer):
         self.partialFunc = np.zeros(shape=(out_feature, 1))  # 关于激活函数的梯度
         # 激活函数
         self.actFunc = act_func
+        # 方差
+        self.mean=mean
+        self.dev=dev
 
     def adjustParam(self, lr, batch_size):
         self.weight -= lr * self.partialWeight / batch_size
         self.bias -= lr * self.partialBias / batch_size
+        # self.weight -= lr * self.partialWeight
+        # self.bias -= lr * self.partialBias
 
     # 梯度清零，方便下一个Batch
     def clearPartial(self):
@@ -135,7 +145,6 @@ class Network:
         self.test_loss_tendency_y = []
         self.train_loss_tendency_y = []
         self.loss_func = loss_func
-
         self.amnos = 0
 
     def add(self, layer: Layer):
@@ -242,7 +251,7 @@ class Network:
         self.single_epoch_train(trainSet=x_set, labelSet=y_set, needBP=False)
         avg_loss = self.loss / x_set.shape[0]
         print(
-            f'{vld_des }: {self.loss}  Avg Loss: {avg_loss} Progress: {epoch+1} / {self.epochs}')
+            f'{vld_des }： {self.loss}  Avg Loss： {avg_loss} Progress: {epoch+1} / {self.epochs}')
         y_containter.append(avg_loss)  # 添加误差
 
     # 专门用于分类验证

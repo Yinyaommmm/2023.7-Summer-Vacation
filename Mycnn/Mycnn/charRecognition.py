@@ -14,13 +14,13 @@ X_train, y_train, X_test, y_test = nn.dl.load_data(
 np.random.seed(42)
 pic_size = 28 * 28
 char_class_num = 12
-epochs = 2000
+epochs = 600
 lr = 0.001
 num1 = 128
 num2 = 64
 batch_size = 100
 mean = 0
-dev = 0.2
+dev = 0.1
 
 # Build Network
 nw = nn.Network(loss_func=nn.ls.CE, batch_size=batch_size,
@@ -38,4 +38,3 @@ nw.add(l3)
 # sys.stdout = open('output.txt', 'w')
 total_time = 0
 total_time = nw.classify_train(X_train, y_train, X_test, y_test)
-
