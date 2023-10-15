@@ -5,7 +5,7 @@ import os
 import cv2
 import pickle
 import NeuralNetwork.Layer as Layer
-
+# sin数据生成
 def createTrainAndTest(size):
     step = 2*np.pi / size
     train_size = int(0.8 * size)
