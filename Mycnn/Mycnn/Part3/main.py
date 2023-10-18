@@ -10,7 +10,7 @@ import os
 import torch.nn as nn
 import torch.optim as optim
 
-
+# 函数计时的注解
 def timethis(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -21,7 +21,7 @@ def timethis(func):
         return r
     return wrapper
 
-
+# 自定义数据集
 class CustomDataset(Dataset):
     def __init__(self, data_dir, transform=None, pic_per_class=620, needTrain=False, total=620):
         self.data_dir = data_dir
@@ -57,7 +57,7 @@ class CustomDataset(Dataset):
 
         return image, label
 
-
+# 返回训练集和测试集
 def createData(batch_size):
     # 数据加载
     data_transform = transforms.Compose([
@@ -77,8 +77,8 @@ def createData(batch_size):
 
     return train_loader, test_loader
 
-
-def train(model: nn.Module, optimizer: optim.Optimizer, loss_fn, data_loader: DataLoader):
+# 训练模型，有BP
+def train(model: nn.Module, optimizer: optim.Optimizer, loss_fn, data_loader: DataLoader,log = True):
     model.train()
     correct_num = 0
     total = 0
@@ -96,11 +96,12 @@ def train(model: nn.Module, optimizer: optim.Optimizer, loss_fn, data_loader: Da
 
     cr = 100 * correct_num / total
     loss_accumulate = torch.tensor(loss_accumulate).mean()
-    print(f'Train Loss: {loss_accumulate.item()} , Train CR: {cr:.2f} %')
+    if log :
+        print(f'Train Loss: {loss_accumulate.item()} , Train CR: {cr:.2f} %')
     return cr, loss.item()
 
-
-def validate(model: nn.Module, loss_fn, data_loader: DataLoader):
+# 测试模型，无BP
+def validate(model: nn.Module, loss_fn, data_loader: DataLoader ,log = True):
     model.eval()
     correct_num = 0
     total = 0
@@ -116,31 +117,35 @@ def validate(model: nn.Module, loss_fn, data_loader: DataLoader):
 
     loss_accumulate = torch.tensor(loss_accumulate).mean()
     cr = 100 * correct_num / total
-    print(f'Test Loss: {loss_accumulate.item()}, Test CR: {cr:.2f}%')
+    if log:
+        print(f'Test Loss: {loss_accumulate.item()}, Test CR: {cr:.2f}%')
     return cr, loss.item()
 
-
+# 训练+测试
 @timethis
-def MyTrain():
+def MyTrain(load = False):
 
     # 类别数量设置
     num_classes = 12
     # 超参
-    of = 16
-    batch_size = 8
-    lr = 0.2
-    epochs = 30
+    of = 8
+    batch_size = 32
+    lr = 0.1
+    epochs = 60
+    kernal_size = 5
 
     # 加载数据
     train_loader, test_loader = createData(batch_size)
 
     # 创建模型实例
-    model = md.SCNN(num_classes, of)
-    model_name = f'S_{of}F_CNN.pth'
-    save_dir = f'Single/{of}F/B{batch_size}'
+    model = md.DCNN(num_classes, of,kernal_size)
+    model_name = f'D_{of}F_K{kernal_size}_CNN.pth'
+    save_dir = f'Double/{of}F/K{kernal_size}'
     save_path = os.path.join(os.getcwd(), 'Part3/DataRecord')
     save_path = os.path.join(save_path, save_dir)
     model_save_path = os.path.join(save_path, model_name)
+    if load == True:
+        model.load_state_dict(torch.load(model_save_path))
 
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr)
@@ -153,13 +158,73 @@ def MyTrain():
     # 训练和测试
     for epoch in range(epochs):
         print(f"------Epoch: {epoch} ------")
-        train_cr, train_loss = train(model, optimizer, loss_fn, train_loader)
-        test_cr, test_loss = validate(model, loss_fn, test_loader)
+        train_cr, train_loss = train(model, optimizer, loss_fn, train_loader,False)
+        test_cr, test_loss = validate(model, loss_fn, test_loader,False)
         train_cr_list.append(train_cr)
         test_cr_list.append(test_cr)
         train_loss_list.append(train_loss)
         test_loss_list.append(test_loss)
+    # 训练数据打印
+    print(f"-@@@@@@k_s {kernal_size}, of {of}@@@@@-")
+    print(f"Min Loss: {torch.min(torch.tensor(test_loss_list))}, at epoch {torch.argmin(torch.tensor(test_loss_list))+1}")
+    print(f"Max Acc: {torch.max(torch.tensor(test_cr_list))}, at epoch {torch.argmax(torch.tensor(test_cr_list))+1}")
+    # 保存Loss和Acc图以及模型
+    print('Save Loss & Acc picture...')
+    dl.drawPlot(epoch_list, train_loss_list, test_loss_list,
+                "Loss Tendency", 'epoch', 'loss', 'Train Loss', 'Test Loss', True, save_path, 'Loss')
+    dl.drawPlot(epoch_list, train_cr_list, test_cr_list, "Correct Ratio",
+                'epoch', 'loss', 'Train ACC', 'Test ACC', True, save_path, 'Acc')
+    print(f'Save the Model to {model_save_path}')
+    torch.save(obj=model.state_dict(),
+               f=f'./Part3/DataRecord/{save_dir}/{model_name}')
 
+# 自动化训练+测试
+@timethis
+def AnaTrain(load = False, oft = 8 , k_s = 3):
+
+    # 类别数量设置
+    num_classes = 12
+    # 超参
+    of = oft
+    batch_size = 32
+    lr = 0.1
+    epochs = 30
+    kernal_size = k_s
+    print(f"-@@@@@@k_s {kernal_size}, of {of}@@@@@-")
+    # 加载数据
+    train_loader, test_loader = createData(batch_size)
+
+    # 创建模型实例
+    model = md.DCNN(num_classes, of,kernal_size)
+    model_name = f'D_{of}F_K{kernal_size}_CNN.pth'
+    save_dir = f'Double/{of}F/K{kernal_size}'
+    save_path = os.path.join(os.getcwd(), 'Part3/DataRecord')
+    save_path = os.path.join(save_path, save_dir)
+    model_save_path = os.path.join(save_path, model_name)
+    if load == True:
+        model.load_state_dict(torch.load(model_save_path))
+
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=lr)
+    train_cr_list = []
+    test_cr_list = []
+    train_loss_list = []
+    test_loss_list = []
+    epoch_list = range(1, epochs+1)
+
+    # 训练和测试
+    for epoch in range(epochs):
+        print(f"------Epoch: {epoch} ------")
+        train_cr, train_loss = train(model, optimizer, loss_fn, train_loader,True)
+        test_cr, test_loss = validate(model, loss_fn, test_loader,True)
+        train_cr_list.append(train_cr)
+        test_cr_list.append(test_cr)
+        train_loss_list.append(train_loss)
+        test_loss_list.append(test_loss)
+    # 训练数据打印
+    print(f"-@@@@@@k_s {kernal_size}, of {of}@@@@@-")
+    print(f"Min Loss: {torch.min(torch.tensor(test_loss_list))}, at epoch {torch.argmin(torch.tensor(test_loss_list))+1}")
+    print(f"Max Acc: {torch.max(torch.tensor(test_cr_list))}, at epoch {torch.argmax(torch.tensor(test_cr_list))+1}")
     # 保存Loss和Acc图以及模型
     print('Save Loss & Acc picture...')
     dl.drawPlot(epoch_list, train_loss_list, test_loss_list,
@@ -172,4 +237,12 @@ def MyTrain():
 
 
 if __name__ == '__main__':
-    MyTrain()
+    #  MyTrain(False)
+    # 16 -5 最佳 98.26%
+     ofList = [16]
+     ksList = [5]
+     for of in ofList:
+         for ks in ksList:
+              AnaTrain(load=False,oft=of , k_s=ks)
+    
+ 
