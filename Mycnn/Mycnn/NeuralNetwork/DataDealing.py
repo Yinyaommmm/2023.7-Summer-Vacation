@@ -6,6 +6,8 @@ import cv2
 import pickle
 import NeuralNetwork.Layer as Layer
 # sin数据生成
+
+
 def createTrainAndTest(size):
     step = 2*np.pi / size
     train_size = int(0.8 * size)
@@ -97,8 +99,9 @@ def drawScatter(dataX: np.ndarray, dataY: np.ndarray, predictY: np.ndarray, desc
 
 
 def drawPlot(x, y1, y2, title, x_des, y_des, y1_des, y2_des, save=False, savePath='', name='need_a_name'):
-    lw = 2 # 线粗
-    mks = 3 # 关节点大小
+    plt.clf()  # 清除上次内容
+    lw = 2  # 线粗
+    mks = 3  # 关节点大小
     plt.plot(x, y1, label=y1_des, color='blue', marker='o',
              linestyle='-', linewidth=lw, markersize=mks)
     plt.plot(x, y2, label=y2_des, color='red', marker='o',
@@ -126,7 +129,7 @@ def save_model(nw: Layer.Network, filename):
         pickle.dump(params, file)
 
 
-def load_model(filename)->Layer.Network:
+def load_model(filename) -> Layer.Network:
     with open(filename, 'rb') as file:
         model_params = pickle.load(file)
     return model_params['network']
