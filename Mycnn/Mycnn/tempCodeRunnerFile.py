@@ -1,8 +1,0 @@
-  # print('output')
-            # print(test_outputs)
-            # print('predict')
-            # print(test_predicted)
-            # print('label')
-            # print(batch_labels)
-            # print('loss')
-            # print(test_loss)
