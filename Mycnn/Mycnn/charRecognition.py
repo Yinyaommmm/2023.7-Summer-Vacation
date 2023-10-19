@@ -4,10 +4,10 @@ import sys
 
 
 # 将所有图片载入数据
-X_train, y_train, X_test, y_test = nn.dl.load_data(
-    "train", num_train_samples=500, num_test_samples=120)
 # X_train (6000,784,1) X_test (1440,784,1)
 # y_train (6000,12,1) y_test (1440,784,1)
+X_train, y_train, X_test, y_test = nn.dl.load_data(
+    "train", num_train_samples=500, num_test_samples=120)
 
 
 # # Hyper Parameter
@@ -49,8 +49,8 @@ X_train, y_train, X_test, y_test = nn.dl.load_data(
 
 # load model and continue to train
 model_name = './提交模型/784-392-196-98-12-m0d0.1-b1-lr0.01'
-xx = nn.dl.load_model(model_name);
+xx = nn.dl.load_model(model_name)
 xx.epochs = 5
 xx.lr = 0.0001
 xx.classify_train(X_train, y_train, X_test, y_test)
-nn.dl.save_model(xx,model_name)
+nn.dl.save_model(xx, model_name)

@@ -8,6 +8,8 @@ import NeuralNetwork.Loss as ls
 import NeuralNetwork.DataDealing as dl
 
 # 层虚基类
+
+
 class Layer(ABC):
     @abstractclassmethod
     def adjustParam(self, lr):
@@ -67,8 +69,8 @@ class FCLayer(Layer):
         # 激活函数
         self.actFunc = act_func
         # 方差
-        self.mean=mean
-        self.dev=dev
+        self.mean = mean
+        self.dev = dev
 
     def adjustParam(self, lr, batch_size):
         self.weight -= lr * self.partialWeight / batch_size
@@ -135,7 +137,7 @@ class Network:
         self.test_correct_ratio = []  # 记录正确率
         self.loss_func = loss_func
         self.amnos = 0
-        self.lastEpochos = 0 # 上一次训练的epochos
+        self.lastEpochos = 0  # 上一次训练的epochos
         self.lastTime = 0
 
     def add(self, layer: Layer):
@@ -219,7 +221,7 @@ class Network:
         start_time = time.time()
         space = int(self.epochs / 20)  # 每5%进行一次测试
         print(f'Start training for {self.epochs} epochs')
-        for epoch in range(self.lastEpochos , self.lastEpochos  +self.epochs,1):
+        for epoch in range(self.lastEpochos, self.lastEpochos + self.epochs, 1):
             print(f"--------epoch: {epoch}----------")
             self.single_epoch_train(
                 trainSet=trainSet, labelSet=trainLabelSet, needBP=True)
@@ -235,10 +237,11 @@ class Network:
         total_time = int(end_time - start_time)
         print(f'This training cost time: {total_time} s')
         print(f'All training cost time: {self.lastTime + total_time} s')
-        print(f'Min TotalLoss: {len(trainLabelSet)* min(self.test_loss_tendency_y)} , Min AvgLoss: {min(self.test_loss_tendency_y)}')
+        print(
+            f'Min TotalLoss: {len(trainLabelSet)* min(self.test_loss_tendency_y)} , Min AvgLoss: {min(self.test_loss_tendency_y)}')
         # 更新以往信息
-        self.lastEpochos += self.epochs 
-        self.lastTime = self.lastTime + total_time 
+        self.lastEpochos += self.epochs
+        self.lastTime = self.lastTime + total_time
         # 绘制Loss曲线
         dl.drawPlot(x=self.loss_tendency_x, y1=self.test_loss_tendency_y, y2=self.train_loss_tendency_y,
                     title='Loss Tendency', x_des="Epoch", y_des="Avg Loss", y1_des="Test Loss", y2_des="Train Loss")
@@ -313,7 +316,7 @@ class Network:
         space = 5  # 每5epoch进行测试
         # 紧接上一次训练
         print(f'Start training for {self.epochs} epochs')
-        for epoch in range(self.lastEpochos,self.lastEpochos + self.epochs , 1):
+        for epoch in range(self.lastEpochos, self.lastEpochos + self.epochs, 1):
             print(f"--------epoch: {epoch}----------")
             trainSet, trainLabelSet = dl.data_shuffle(trainSet, trainLabelSet)
             cr = self.classify_single_epoch_train(
@@ -327,15 +330,18 @@ class Network:
                 self.classify_validation_loss(trainSet,
                                               trainLabelSet, epoch, self.train_loss_tendency_y, self.train_correct_ratio, "Train Loss")
             self.clearLoss()
+
         end_time = time.time()
         total_time = int(end_time - start_time)
         print(f'This training cost time: {total_time} s')
         print(f'All training cost time: {self.lastTime + total_time} s')
-        print(f'Min TotalLoss: {len(trainLabelSet)* min(self.test_loss_tendency_y)} , Min AvgLoss: {min(self.test_loss_tendency_y)}')
-        print(f'Max Correct Ratio: {max (self.test_correct_ratio)}, at epoch {(np.argmax(self.test_correct_ratio)+1) * space}')
-        self.lastEpochos += self.epochs # 更新lastEpochs
+        print(
+            f'Min TotalLoss: {len(trainLabelSet)* min(self.test_loss_tendency_y)} , Min AvgLoss: {min(self.test_loss_tendency_y)}')
+        print(
+            f'Max Correct Ratio: {max (self.test_correct_ratio)}, at epoch {(np.argmax(self.test_correct_ratio)+1) * space}')
+        self.lastEpochos += self.epochs  # 更新lastEpochs
         self.lastTime = self.lastTime + total_time
-      
+
         # 绘制Loss曲线
         dl.drawPlot(x=self.loss_tendency_x, y1=self.test_loss_tendency_y, y2=self.train_loss_tendency_y,
                     title='Loss Tendency', x_des="Epoch", y_des="Avg Loss", y1_des="Test Loss", y2_des="Train Loss")

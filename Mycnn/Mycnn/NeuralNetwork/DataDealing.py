@@ -7,6 +7,8 @@ import pickle
 import NeuralNetwork.Layer as Layer
 # sin数据生成
 
+# 创建sin数据
+
 
 def createTrainAndTest(size):
     step = 2*np.pi / size
@@ -74,6 +76,31 @@ def load_data(data_dir, num_train_samples=500, num_test_samples=120):
         num_test_samples*char_class_num, char_class_num, 1)
 
     return X_train, y_train, X_test, y_test
+
+
+def interview_load_test_data(data_dir, num_test_samples=240):
+    X_test = []
+    y_test = []
+    for class_label in range(1, 13):
+        class_folder = os.path.join(data_dir, str(class_label))
+        images = sorted(os.listdir(class_folder))
+        for i in range(num_test_samples):
+            image_file = images[i]
+            image_path = os.path.join(class_folder, image_file)
+            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            X_test.append(image)
+            y_test.append(class_label-1)
+    pic_size = 28
+    char_class_num = 12
+    X_test = np.array(X_test).reshape(
+        num_test_samples*char_class_num, pic_size**2, 1)
+    y_test = np.array(y_test)
+
+    X_test = X_test / 255.0
+    y_test = np.eye(char_class_num)[y_test].reshape(
+        num_test_samples*char_class_num, char_class_num, 1)
+
+    return X_test, y_test
 
 # 打乱数据
 
