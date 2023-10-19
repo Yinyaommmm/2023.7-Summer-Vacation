@@ -11,6 +11,8 @@ import torch.nn as nn
 import torch.optim as optim
 
 # 函数计时的注解
+
+
 def timethis(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -22,6 +24,8 @@ def timethis(func):
     return wrapper
 
 # 自定义数据集
+
+
 class CustomDataset(Dataset):
     def __init__(self, data_dir, transform=None, pic_per_class=620, needTrain=False, total=620):
         self.data_dir = data_dir
@@ -58,6 +62,8 @@ class CustomDataset(Dataset):
         return image, label
 
 # 返回训练集和测试集
+
+
 def createData(batch_size):
     # 数据加载
     data_transform = transforms.Compose([
@@ -78,7 +84,9 @@ def createData(batch_size):
     return train_loader, test_loader
 
 # 训练模型，有BP
-def train(model: nn.Module, optimizer: optim.Optimizer, loss_fn, data_loader: DataLoader,log = True):
+
+
+def train(model: nn.Module, optimizer: optim.Optimizer, loss_fn, data_loader: DataLoader, log=True):
     model.train()
     correct_num = 0
     total = 0
@@ -96,12 +104,14 @@ def train(model: nn.Module, optimizer: optim.Optimizer, loss_fn, data_loader: Da
 
     cr = 100 * correct_num / total
     loss_accumulate = torch.tensor(loss_accumulate).mean()
-    if log :
+    if log:
         print(f'Train Loss: {loss_accumulate.item()} , Train CR: {cr:.2f} %')
     return cr, loss.item()
 
 # 测试模型，无BP
-def validate(model: nn.Module, loss_fn, data_loader: DataLoader ,log = True):
+
+
+def validate(model: nn.Module, loss_fn, data_loader: DataLoader, log=True):
     model.eval()
     correct_num = 0
     total = 0
@@ -122,8 +132,10 @@ def validate(model: nn.Module, loss_fn, data_loader: DataLoader ,log = True):
     return cr, loss.item()
 
 # 训练+测试
+
+
 @timethis
-def MyTrain(load = False):
+def MyTrain(load=False):
 
     # 类别数量设置
     num_classes = 12
@@ -138,7 +150,7 @@ def MyTrain(load = False):
     train_loader, test_loader = createData(batch_size)
 
     # 创建模型实例
-    model = md.DCNN(num_classes, of,kernal_size)
+    model = md.DCNN(num_classes, of, kernal_size)
     model_name = f'D_{of}F_K{kernal_size}_CNN.pth'
     save_dir = f'Double/{of}F/K{kernal_size}'
     save_path = os.path.join(os.getcwd(), 'Part3/DataRecord')
@@ -158,16 +170,19 @@ def MyTrain(load = False):
     # 训练和测试
     for epoch in range(epochs):
         print(f"------Epoch: {epoch} ------")
-        train_cr, train_loss = train(model, optimizer, loss_fn, train_loader,False)
-        test_cr, test_loss = validate(model, loss_fn, test_loader,False)
+        train_cr, train_loss = train(
+            model, optimizer, loss_fn, train_loader, False)
+        test_cr, test_loss = validate(model, loss_fn, test_loader, False)
         train_cr_list.append(train_cr)
         test_cr_list.append(test_cr)
         train_loss_list.append(train_loss)
         test_loss_list.append(test_loss)
     # 训练数据打印
     print(f"-@@@@@@k_s {kernal_size}, of {of}@@@@@-")
-    print(f"Min Loss: {torch.min(torch.tensor(test_loss_list))}, at epoch {torch.argmin(torch.tensor(test_loss_list))+1}")
-    print(f"Max Acc: {torch.max(torch.tensor(test_cr_list))}, at epoch {torch.argmax(torch.tensor(test_cr_list))+1}")
+    print(
+        f"Min Loss: {torch.min(torch.tensor(test_loss_list))}, at epoch {torch.argmin(torch.tensor(test_loss_list))+1}")
+    print(
+        f"Max Acc: {torch.max(torch.tensor(test_cr_list))}, at epoch {torch.argmax(torch.tensor(test_cr_list))+1}")
     # 保存Loss和Acc图以及模型
     print('Save Loss & Acc picture...')
     dl.drawPlot(epoch_list, train_loss_list, test_loss_list,
@@ -179,8 +194,10 @@ def MyTrain(load = False):
                f=f'./Part3/DataRecord/{save_dir}/{model_name}')
 
 # 自动化训练+测试
+
+
 @timethis
-def AnaTrain(load = False, oft = 8 , k_s = 3):
+def AnaTrain(load=False, oft=8, k_s=3):
 
     # 类别数量设置
     num_classes = 12
@@ -195,7 +212,7 @@ def AnaTrain(load = False, oft = 8 , k_s = 3):
     train_loader, test_loader = createData(batch_size)
 
     # 创建模型实例
-    model = md.DCNN(num_classes, of,kernal_size)
+    model = md.DCNN(num_classes, of, kernal_size)
     model_name = f'D_{of}F_K{kernal_size}_CNN.pth'
     save_dir = f'Double/{of}F/K{kernal_size}'
     save_path = os.path.join(os.getcwd(), 'Part3/DataRecord')
@@ -215,16 +232,19 @@ def AnaTrain(load = False, oft = 8 , k_s = 3):
     # 训练和测试
     for epoch in range(epochs):
         print(f"------Epoch: {epoch} ------")
-        train_cr, train_loss = train(model, optimizer, loss_fn, train_loader,True)
-        test_cr, test_loss = validate(model, loss_fn, test_loader,True)
+        train_cr, train_loss = train(
+            model, optimizer, loss_fn, train_loader, True)
+        test_cr, test_loss = validate(model, loss_fn, test_loader, True)
         train_cr_list.append(train_cr)
         test_cr_list.append(test_cr)
         train_loss_list.append(train_loss)
         test_loss_list.append(test_loss)
     # 训练数据打印
     print(f"-@@@@@@k_s {kernal_size}, of {of}@@@@@-")
-    print(f"Min Loss: {torch.min(torch.tensor(test_loss_list))}, at epoch {torch.argmin(torch.tensor(test_loss_list))+1}")
-    print(f"Max Acc: {torch.max(torch.tensor(test_cr_list))}, at epoch {torch.argmax(torch.tensor(test_cr_list))+1}")
+    print(
+        f"Min Loss: {torch.min(torch.tensor(test_loss_list))}, at epoch {torch.argmin(torch.tensor(test_loss_list))+1}")
+    print(
+        f"Max Acc: {torch.max(torch.tensor(test_cr_list))}, at epoch {torch.argmax(torch.tensor(test_cr_list))+1}")
     # 保存Loss和Acc图以及模型
     print('Save Loss & Acc picture...')
     dl.drawPlot(epoch_list, train_loss_list, test_loss_list,
@@ -237,12 +257,25 @@ def AnaTrain(load = False, oft = 8 , k_s = 3):
 
 
 if __name__ == '__main__':
+    # 训练模型用
     #  MyTrain(False)
     # 16 -5 最佳 98.26%
-     ofList = [16]
-     ksList = [5]
-     for of in ofList:
-         for ks in ksList:
-              AnaTrain(load=False,oft=of , k_s=ks)
+
+    # 自动化测试用
+    #  ofList = [16]
+    #  ksList = [5]
+    #  for of in ofList:
+    #      for ks in ksList:
+    #           AnaTrain(load=False,oft=of , k_s=ks)
+
+    # 面试用
+    of = 16
+    kernal_size = 5
+
+    model_name = f'D_{of}F_K{kernal_size}_CNN.pth'
+    save_path = f'Part3/DataRecord/Double/{of}F/K{kernal_size}'
+    save_path = os.path.join(os.getcwd(), save_path)
+    model_path = os.path.join(save_path, model_name)
+    model = md.DCNN(num_classes=12, output_feature=of, k_s=kernal_size)
+    model.load_state_dict(torch.load(model_path))
     
- 
